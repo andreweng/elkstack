@@ -23,8 +23,8 @@ Host Directory mount for persistence:
 
 Elasticsearch:
 
-docker run \/
-    -p 9200:9200 \
+docker run /\
+    -p 9200:9200 /\
     -p 9300:9300 \
     -v ${PWD}/elasticsearch/config:/usr/share/elasticsearch/config \
     -v ${PWD}/elasticsearch/logs:/usr/share/elasticsearch/logs \
