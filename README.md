@@ -19,7 +19,16 @@ Host Directory mount for persistence:
 -- NOTE: if you open additional ports, don't forget to append those ports in docker run
 - data (Not sure if this is needed, but we'll see)
 
-## Docker Run:
+## Docker Compose:
+#### docker-compose up
+
+This will run all three instances: elasticsearch, kibana, logstash
+
+http://localhost:5601
+
+Default logstash port is <b>5141/\TCP</b>
+
+## Manual Run:
 
 Elasticsearch:
 
