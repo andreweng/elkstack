@@ -19,6 +19,17 @@ Host Directory mount for persistence:
 -- NOTE: if you open additional ports, don't forget to append those ports in docker run
 - data (Not sure if this is needed, but we'll see)
 
+### Deployment Notes
+The containers will have permission issues with the logstash and kibana data directory in the elkstack folder.  This is because the services are run in non privileged users.  In a production environment, I will use volumes to correct this, but during this test phase, just do the following:
+
+- cd elkstack
+- chmod -R 777 *
+
+Also, don't forget the firewall ports and security contexts if you have them open:
+- ufw allow 9200/tcp
+- ufw allow 5601/tcp
+- ufw allow 5141/tcp
+
 ## Docker Compose:
 #### docker-compose up
 
