@@ -10,8 +10,9 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - es_logs:/usr/share/elasticsearch/logs
-      - es_data:/usr/share/elasticsearch/data
+      - ${PWD}/elasticsearch/config:/usr/share/elasticsearch/config
+      - ${PWD}/elasticsearch/logs:/usr/share/elasticsearch/logs
+      - ${PWD}/elasticsearch/data:/usr/share/elasticsearch/data
   
   kibana:
     image: docker.elastic.co/kibana/kibana:7.8.0
@@ -20,8 +21,8 @@ services:
     ports:
       - "5601:5601"
     volumes:
-      - kibana/config:/usr/share/kibana/config/
-      - kibana_data:/usr/share/kibana/data
+      - ${PWD}/kibana/config:/usr/share/kibana/config
+      - ${PWD}/kibana/data:/usr/share/kibana/data
     depends_on:
       - elasticsearch
         
@@ -32,15 +33,8 @@ services:
     ports:
       - "5141:5141"
     volumes:
-      - logstash/pipeline:/usr/share/logstash/pipeline/
-      - logstash_data:/usr/share/logstash/data
+      - ${PWD}/logstash/pipeline:/usr/share/logstash/pipeline
+      - ${PWD}/logstash/data:/usr/share/logstash/data
+      - ${PWD}/logstash/config:/usr/share/config
     depends_on:
       - elasticsearch
-
-volumes:
-  es_data:
-  es_logs:
-  kibana_data:
-  logstash_data:
-  logstash/pipeline:
-  kibana/config:
