@@ -38,8 +38,3 @@ services:
       - ${PWD}/logstash/config:/usr/share/config
     depends_on:
       - elasticsearch
-
-volumes:
-  es_data01:
-  kibana_data01:
-  logstash_data01:
