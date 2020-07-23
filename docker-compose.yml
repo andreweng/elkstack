@@ -2,7 +2,7 @@ version: "3"
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
-    container_name: elasticsearch
+    container_name: acklab_es01
     hostname: elasticsearch
     environment:
       - "discovery.type=single-node"
@@ -16,7 +16,7 @@ services:
   
   kibana:
     image: docker.elastic.co/kibana/kibana:7.8.0
-    container_name: kibana
+    container_name: acklab_kib01
     hostname: kibana
     ports:
       - "5601:5601"
@@ -28,7 +28,7 @@ services:
         
   logstash:
     image: docker.elastic.co/logstash/logstash:7.8.0
-    container_name: logstash
+    container_name: acklab_log01
     hostname: logstash
     ports:
       - "5141:5141"
@@ -38,3 +38,8 @@ services:
       - ${PWD}/logstash/config:/usr/share/config
     depends_on:
       - elasticsearch
+
+volumes:
+  es_data01:
+  kibana_data01:
+  logstash_data01:
