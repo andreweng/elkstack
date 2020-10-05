@@ -51,15 +51,15 @@ The command above is run on a terminal window while inside the elkstack/scripts 
 ### Twitter API
 Since we are going to programmatically access twitter and pull records, we'll need to use the Twitter API.  
 
-#### Authenticaiton
-There are 3 types of authentication APIs we can use:
+#### Authentication
+There are 3 types of authentication mechanisms we can use, however basic authentication is deprecated for awhile now:
 1. OAuth 1.0a
-  - OAuth 1.0a is a method used to make API requests on behalf of a Twitter Account.
+  - OAuth 1.0a is a method used to make API requests on behalf of a Twitter Account.  In other words, application-user authentication.
 
 2. OAuth 2.0 Bearer Token
-  - OAuth 2.0 Bearer Token is a authenticates requests onf behalf of your developer App.  Specifically, it allows your app to pull records in READ-ONLY.
+  - OAuth 2.0 Bearer Token is a authenticates requests onf behalf of your developer App.  Specifically, it allows your app to pull records in READ-ONLY.  In other words, application authentication.
 
-3. Basic Authentication
+3. Basic Authentication [Deprecated]
   - Basic Authentication accesses twitter as you, it's basic authentication where you pass your email and password to the app.
 
 For this use-case, I'll be using the OAuth 1.0a, this is mainly so I can access a full range of APIs for later scalability.
@@ -78,6 +78,8 @@ Let's take a look at what modules we are using.  If you used requirements.txt to
 
 [Tweepy](https://github.com/tweepy/tweepy) **|** [Documentation](http://docs.tweepy.org/en/latest/index.html)  
 
+I created a notebook that I used to take notes and play around with the module [Tweepy_tutorial](tweepy_tutorial.ipy)
+
 [Elasticsearch](https://github.com/elastic/elasticsearch-py) **|** [Documentation](https://elasticsearch-py.readthedocs.io/en/master/)
 
 **Built in modules:**
@@ -86,9 +88,72 @@ Let's take a look at what modules we are using.  If you used requirements.txt to
 
 [datetime Documentation](https://docs.python.org/3/library/datetime.html)
 
-<code>$ sudo pip install tweepy</code>
+<code>$ sudo pip3 install tweepy</code>
 
-![pip_install_tweepy](images/tweepy_install.png)
+![pip3_install_tweepy](images/tweepy_install.png)
+
+**Hello World!**
+Testing authentication with API call
+
+```python
+# Set elasticsearch server
+es = elasticsearch.Elasticsearch([{"host":"localhost","port":9200}])
+
+# Initialize dictionary
+twitter_cred = dict()
+
+# Enter API keys
+twitter_cred["CONSUMER_KEY"] = apikeys[0]
+twitter_cred["CONSUMER_SECRET"] = apikeys[1]
+
+# Access Tokens
+twitter_cred["ACCESS_KEY"] = apikeys[2]
+twitter_cred["ACCESS_SECRET"] = apikeys[3]
+
+auth = tw.OAuthHandler(twitter_cred["CONSUMER_KEY"], twitter_cred["CONSUMER_SECRET"])
+auth.set_access_token(twitter_cred["ACCESS_KEY"], twitter_cred["ACCESS_SECRET"])
+api = tw.API(auth, wait_on_rate_limit=True)
+
+public_tweets = api.home_timeline()
+for tweet in public_tweets:
+    print(tweet.text)
+```
+
+```text
+RT @TrustlessState: Ethereum vs Moloch
+
+Listen in to @BanklessHQ Pod tomorrow https://t.co/EYd6siXGCC
+Cognitive/Artificial Intelligence Systems Market 2020 | Know the Latest COVID19 Impact Analysis .... #industry40… https://t.co/XfleZNyqbi
+Follow our @CertifyGIAC blog for news, career advice and insights!
+
+Keep your career on the right track during the… https://t.co/g8sv0UmTr0
+[Course Video] 64-bit Assembly Language &amp; Shellcoding: HelloWorld Shellcode JMP-CALL-POP Technique… https://t.co/EcylCvIJA3
+Part 2 of the fireside chat between @omgnetworkhq and @curvegrid that’s for the ages! Kick back and learn everythin… https://t.co/230t6aNzsf
+It’s technical, but it’s worth it! Learn what Javascripts were used to build the @reddit Community Points Engine an… https://t.co/Qn5fA87bkP
+"The growth of the #Bitcoin network, meaning the number of active users and transactions, has stalled in the near t… https://t.co/kodFzWlXaO
+Times of India @timesofindia: AI: A force for social empowerment. #AI #ArtificialIntelligence #dataresponsible https://t.co/be9GomEByy
+RAISE 2020: PM Narendra Modi to Inaugurate Mega Virtual Summit on Artificial Intelligence Today .... #aistrategy… https://t.co/F2ZuRkPZHO
+With verbose logging on all machines and ELK installation, our GCB Cyber Range is equally useful for Red and Blue t… https://t.co/7ZyTIXj76B
+Familiarise yourself with windows process fundamentals and learn how to enumerate processes and perform code inject… https://t.co/nvxqfTeeZo
+#BinanceFutures Leaderboard Update:
+
+🔸 Add your Twitter account
+
+🔸 Extended to top 500
+
+🔸 Filter by sharing positio… https://t.co/dk4UzLK1K3
+Google delays mandating Play Store’s 30% cut in India to April 2022; Paytm launches mini app store.… https://t.co/tACcbTSAjl
+The best summary of crypto market structure's rapid evolution and the implications for different players. A must re… https://t.co/oyJa4LxsfQ
+RT @JATayler: Oh my god https://t.co/Uh6dvfvLmJ
+RT @Casey: so perfect.. if only we’d started with these everyone would be wearing a mask.
+While Darknet Users Search for New Markets, Global Law Enforcement Reveals Mass Arrests https://t.co/NadzkEh06s https://t.co/VIFKNxc6mZ
+[Course Video] Reconnaissance for Red-Blue Teams: Memcache Servers Part 5: Advanced Enumeration: LRU CRAWLER… https://t.co/uiugVKAP5n
+Do you really want to work with Justin Sun? Apply here: https://t.co/GKNOmX2ykp https://t.co/vGAunnlYO4
+RT @seibelj: On Poloniex and Working With Justin Sun https://t.co/M3lAFyiDQQ @Poloniex @justinsuntron"
+```
+<code>$ sudo pip3 install elasticsearch</code>
+
+![pip3_install_elasticsearch](images/elasticsearch_install.png)
 
 ### Execute
 ```python
@@ -99,6 +164,17 @@ import datetime as dt
 ```
 
 ```python
+# Import keys from a saved file instead of inputting it directly into the script
+
+key_location = "/home/andrew/twitter.keys"
+apikeys = []
+with open(key_location) as keys:
+    for i in keys:
+            apikeys.append(i.split("=")[1].strip(" ").strip("\n"))
+            keys.close()
+```
+
+```python
 # Set elasticsearch server
 es = elasticsearch.Elasticsearch([{"host":"localhost","port":9200}])
 
@@ -106,12 +182,12 @@ es = elasticsearch.Elasticsearch([{"host":"localhost","port":9200}])
 twitter_cred = dict()
 
 # Enter API keys
-twitter_cred["CONSUMER_KEY"] = "<API KEY>"
-twitter_cred["CONSUMER_SECRET"] = "<API KEY>"
+twitter_cred["CONSUMER_KEY"] = apikeys[0]
+twitter_cred["CONSUMER_SECRET"] = apikeys[1]
 
 # Access Tokens
-twitter_cred["ACCESS_KEY"] = "<API KEY>"
-twitter_cred["ACCESS_SECRET"] = "<API KEY>"
+twitter_cred["ACCESS_KEY"] = apikeys[2]
+twitter_cred["ACCESS_SECRET"] = apikeys[3]
 
 auth = tw.OAuthHandler(twitter_cred["CONSUMER_KEY"], twitter_cred["CONSUMER_SECRET"])
 
@@ -121,8 +197,11 @@ api = tw.API(auth, wait_on_rate_limit=True)
 ```
 
 ```python
-search = "palantir"
-date_since = "2015-01-01"
+search = "palantir OR PLTR"
+
+# Search today's date minus 7 days; this is because Twitter will only let you go back 7 days on a free-tier account
+
+date_from = (dt.datetime.today() - dt.timedelta(days=7)).strftime("%Y-""%m-""%d")
 ```
 
 ```python
@@ -135,7 +214,7 @@ tweets = tw.Cursor(api.search,
             q = search, 
             tweet_mode = "extended", 
             lang = "en", 
-            since = date_since).items(3000)
+            since = date_from).items(3000)
 
 with open("tweets.txt", "w") as tweetfile:
 
@@ -146,14 +225,12 @@ with open("tweets.txt", "w") as tweetfile:
 
         es.index(index=index_name, 
                     ignore = 400, 
-                    doc_type = "tweet", 
                     id = tweet.id, 
                     body = tweet_data)
 
         tweetfile.write(str(tweet_data))
 
 tweetfile.close()
-
 ```
 ## Create Visualizations with Kibana
 
