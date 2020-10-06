@@ -1,5 +1,12 @@
-# Visualizing Tweets with Elasticsearch and Kibana
-> Author: Andrew Eng | Updated: 2020-10-05
+# Open Source Intelligence with Elasticsearch: Analyzing Twitter Feeds 1/3
+> Author: Andrew Eng | Updated: 2020-10-05 | Part 1 of 3
+
+## Introduction
+This is a 3 part series in open source intelligence with Elasticsearch.      
+
+In part 1: we will look at data acquisition and building a python app to acquire, clean, and transfer data.
+In part 2: we will look at building visualizations and dashboards in Kibana and Elasticsearch.
+In part 3: we will look at putting this into sustained operations.
 
 ## Start with Why
 I had an opportunity to interview with a large tech company but I didn't know much about them (I've been oblivious of what's popping up in Silicon Valley).  In order to do my due diligence and prepare for the interview, I spent the weekend working on this to help me better understand the general sentiments and what the company was about.  At that point in time, any news is new news, and I wanted to consume it.
@@ -96,9 +103,6 @@ I created a notebook that I used to take notes and play around with the module [
 Testing authentication with API call
 
 ```python
-# Set elasticsearch server
-es = elasticsearch.Elasticsearch([{"host":"localhost","port":9200}])
-
 # Initialize dictionary
 twitter_cred = dict()
 
@@ -156,16 +160,30 @@ RT @seibelj: On Poloniex and Working With Justin Sun https://t.co/M3lAFyiDQQ @Po
 ![pip3_install_elasticsearch](images/elasticsearch_install.png)
 
 ### Execute
+Let's get to coding.  
+
+Start off with importing tweepy, datetime, and elasticsearch
+
 ```python
 import tweepy as tw
-import json
-import elasticsearch
-import datetime as dt
+from datetime import datetime as dt
+from elasticsearch import Elasticsearch
+```
+
+Create your API credentials text file and name it twitter.keys.  my twitter.keys file looks like:
+
+```text
+(base) andrew@tangent:~$ cat twitter.keys 
+api_key = <redacted>
+api_secret_key = <redacted>
+access_token = <redacted>
+access_token_secret = <redacted>
+(base) andrew@tangent:~$ 
+
 ```
 
 ```python
 # Import keys from a saved file instead of inputting it directly into the script
-
 key_location = "/home/andrew/twitter.keys"
 apikeys = []
 with open(key_location) as keys:
@@ -174,10 +192,9 @@ with open(key_location) as keys:
             keys.close()
 ```
 
-```python
-# Set elasticsearch server
-es = elasticsearch.Elasticsearch([{"host":"localhost","port":9200}])
+Pass the key information to the script and set server configurations
 
+```python
 # Initialize dictionary
 twitter_cred = dict()
 
@@ -194,47 +211,93 @@ auth = tw.OAuthHandler(twitter_cred["CONSUMER_KEY"], twitter_cred["CONSUMER_SECR
 auth.set_access_token(twitter_cred["ACCESS_KEY"], twitter_cred["ACCESS_SECRET"])
 
 api = tw.API(auth, wait_on_rate_limit=True)
+
+# Initialize elasticsearch node
+es = Elasticsearch('127.0.0.1', port=9200)
+```
+
+Data acquisition function: Takes 2 arguments; 
+- search = what to search for, 
+- acq = how many tweets to grab
+
+> usage: acqData('palantir','10')
+
+In the above example, I am looking for any keyword matches for "palantir" and I want to grab 10 most recent tweets.  
+There's a lot of metadata in each tweet.  I am only extracting ones that I care about.  In actuality, it might be better to collect everything and perform post processing after it hits elasticsearch.
+
+
+```python
+def acqData(search, acq):
+
+    # Create an index name using our search criteria and today's date
+    index_name = search.split(' ')[0] + '-' + dt.today().strftime('%Y-%m-%d')
+
+    # Initialize the feed list of dictionaries
+    feed = []
+    
+    print('::Acquiring Data::')
+   
+    # Data Acquisition
+    for i in tqdm(range(acq)):
+        for tweet in tw.Cursor(api.search, q=search, tweet_mode='extended').items(acq):
+            feed.append(tweet._json)
+
+    # Formatting the data and extracting what we need
+    count = 0
+    
+    print('::Transferring to Elasticsearch Search::')
+    
+    while count < len(feed):
+        for i in tqdm(range(acq)):
+
+            # Created variables instead of directly injecting it to the dictionary because it's easier to read
+            tweet_date = feed[count]['created_at']
+            username = feed[count]['user']['screen_name']
+            account_creation_date = feed[count]['created_at']
+            user_description = feed[count]['user']['description']
+            user_url = feed[count]['user']['url']
+            verified_status = feed[count]['user']['verified']
+            geo_enabled = feed[count]['user']['geo_enabled']
+            friends_count = feed[count]['user']['friends_count']
+            followers_count = feed[count]['user']['followers_count']
+            retweeted_count = feed[count]['retweet_count']
+            favorite_count = feed[count]['favorite_count']
+            hashtags = feed[count]['entities']['hashtags']
+            tweet_full_text = feed[count]['full_text']
+
+            # Prepare data for elasticsearch
+            doc = {
+                '@timestamp': dt.now(),
+                'tweet_date': tweet_date,
+                'username': str(username),
+                'account_creation_date': str(account_creation_date),
+                'user_description': str(user_description),
+                'user_url': str(user_url),
+                'verified_status': bool(verified_status),
+                'geo_enabled': bool(geo_enabled),
+                'friends_count': int(friends_count),
+                'followers_count': int(followers_count),
+                'retweeted_count': int(retweeted_count),
+                'favorite_count': int(favorite_count),
+                'hashtags': hashtags,
+                'tweet_full_text': str(tweet_full_text),
+                'word_list': str(tweet_full_text).split(' ')
+            }
+
+            # Import into elasticsearch using the generated index name at the top of the function <search> + <date>
+            es.index(index=index_name, body=doc)
+
+            count +=1
 ```
 
 ```python
-search = "palantir OR PLTR"
-
-# Search today's date minus 7 days; this is because Twitter will only let you go back 7 days on a free-tier account
-
-date_from = (dt.datetime.today() - dt.timedelta(days=7)).strftime("%Y-""%m-""%d")
+# Main Function; Let's run this function!
+acqData('palantir OR PLTR', 100)
 ```
 
-```python
-tweets = []
+![AcqData Sample Image](images/acqData_sample1.png)
 
-datetime_object = dt.date.today()
-index_name = f"{search} - {datetime_object}"
+![Screenshot of data imported into Elasticsearch](images/es_stage1.png)
 
-tweets = tw.Cursor(api.search, 
-            q = search, 
-            tweet_mode = "extended", 
-            lang = "en", 
-            since = date_from).items(3000)
-
-with open("tweets.txt", "w") as tweetfile:
-
-    tweet_data = {}
-
-    for tweet in tweets:
-        tweet_data = {"timestamp":tweet.created_at, "tweet":tweet._json}
-
-        es.index(index=index_name, 
-                    ignore = 400, 
-                    id = tweet.id, 
-                    body = tweet_data)
-
-        tweetfile.write(str(tweet_data))
-
-tweetfile.close()
-```
-## Create Visualizations with Kibana
-
-## Conclusion
-
-## References:
-[1] [Introduction to tweepy, Twitter for Python](https://www.pythoncentral.io/introduction-to-tweepy-twitter-for-python/), August 2013: Python Central
+## Part 1 Conclusion:
+Part 1 of this series focuses on data acquisition and using python along with 2 modules: [Tweepy](https://github.com/tweepy/tweepy) and [Elasticsearch](https://github.com/elastic/elasticsearch-py).  We used [Tweepy](https://github.com/tweepy/tweepy) as programatic inferface to Twitter and then used Elasticsearch to inject tweets into the database.  In Part 2, we'll look at what to do with it once it is in Elasticsearch.
