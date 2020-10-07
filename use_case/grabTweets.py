@@ -6,7 +6,7 @@ from elasticsearch import Elasticsearch
 
 def acqData(search, acq):
 
-    index_name = search.split(' ')[0] + '-' + dt.today().strftime('%Y-%m-%d')
+    index_name = idx + dt.today().strftime('%Y-%m-%d')
     feed = []
     
     print('::Acquiring Data::')
@@ -58,13 +58,14 @@ def acqData(search, acq):
     print(f'Processed {tweet_count} records of {search} to {server}')
    
 def help():
-    print('usage: grabTweets.py "palantir OR PLTR" 2500 "172.16.100.25"')
-    print(f'Search + Number to Tweets to Grab + Elasticsearch Server')
+    print('usage: grabTweets.py "palantir OR PLTR" 2500 "172.16.100.25" "index_name"')
+    print(f'Search + Number to Tweets to Grab + Elasticsearch Server + Index Name')
 
 try:
     search = sys.argv[1] 
     tweet_count = sys.argv[2]
     server = sys.argv[3]
+    idx = sys.argv[4]
 
     # Import keys from a saved file instead of inputting it directly into the script.  
     # Strip whitespaces and split on = as I only want the key values
