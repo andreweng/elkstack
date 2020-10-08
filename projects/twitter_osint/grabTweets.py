@@ -58,8 +58,8 @@ def acqData(search, acq):
     print(f'Processed {tweet_count} records of {search} to {server}')
    
 def help():
-    print('usage: grabTweets.py "palantir OR PLTR" 2500 "172.16.100.25" "index_name"')
-    print(f'Search + Number to Tweets to Grab + Elasticsearch Server + Index Name')
+    print('usage: \n python3 grabTweets.py ["search"] [tweet_count] ["elasticsearch node"] \n')
+    print(f'    python3 grabTweets.py "palantir OR PLTR" 2500 "172.16.100.200" "palantir-index-" \n')
 
 try:
     search = sys.argv[1] 
@@ -69,7 +69,6 @@ try:
 
     # Import keys from a saved file instead of inputting it directly into the script.  
     # Strip whitespaces and split on = as I only want the key values
-
     key_location = 'twitter.keys'
     apikeys = []
     with open(key_location) as keys:
@@ -89,20 +88,26 @@ try:
     twitter_cred["ACCESS_SECRET"] = apikeys[3]
 
     # Set authentication object
-
     auth = tw.OAuthHandler(twitter_cred["CONSUMER_KEY"], twitter_cred["CONSUMER_SECRET"])
     auth.set_access_token(twitter_cred["ACCESS_KEY"], twitter_cred["ACCESS_SECRET"])
 
     # Create api object with authentication
-
     api = tw.API(auth, wait_on_rate_limit=True)
 
+    # Set Elasticsearch Server
     es = Elasticsearch(server, port=9200)
 
+    # Execute search
     acqData(str(search), int(tweet_count))
 
 except FileNotFoundError:
-    print(f'\n !!! You need to create a twitter.keys file !!!\n')
+    # Key not found
+    print(f'\n !!! You need to create a twitter.key file !!!\n')
+    print(f'*** If you haven't done so, create a twitter.key file in the same directory of this script ***')
+    print(f'Example of twitter.key file:\n')
+    print(f'api_key = [key]\n api_secret_key = [key]\n access_token = [key]\n access_token_secret = [key]\n')
+
 except IndexError:
+    # Didn't input any arguments
     print(f'\n !!! You need to add some arguments!!!')
     help()

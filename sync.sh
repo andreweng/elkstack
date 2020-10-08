@@ -10,4 +10,8 @@ touch elasticsearch/logs/.lock &&
 touch logstash/data/.lock &&
 touch kibana/data/.lock &&
 
-echo "Data and logs are purged.  Dont' forget to git push"
+git add -A &&
+git commit -m "synched via script" &&
+git push &&
+
+echo "Synched from local machine to github."
