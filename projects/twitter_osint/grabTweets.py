@@ -102,8 +102,8 @@ try:
 
 except FileNotFoundError:
     # Key not found
-    print(f'\n !!! You need to create a twitter.key file !!!\n')
-    print(f'*** If you haven't done so, create a twitter.key file in the same directory of this script ***')
+    print(f'\n !!! You need to create a twitter.keys file !!!\n')
+    print(f'*** If you haven't done so, create a twitter.keys file in the same directory of this script ***')
     print(f'Example of twitter.key file:\n')
     print(f'api_key = [key]\n api_secret_key = [key]\n access_token = [key]\n access_token_secret = [key]\n')
 
