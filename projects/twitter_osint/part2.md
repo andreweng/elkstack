@@ -9,6 +9,7 @@ I expanded the search criteria to include all of the metadata from each tweet.  
 Since the code was getting larger than I expected.  I took out some uneeded things.  I simplified the feed to elastic function
 
 ```python
+
 while count < len(feed):
         doc = {
             '@timestamp': dt.now(),
