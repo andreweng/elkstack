@@ -4,6 +4,11 @@ import sys
 from datetime import datetime as dt
 from elasticsearch import Elasticsearch
 
+# Initializing objects
+twitter_cred = dict()
+api = ''
+es = ''
+
 def acqData(search, acq):
 
     index_name = idx + dt.today().strftime('%Y-%m-%d')
@@ -133,28 +138,24 @@ def acqData(search, acq):
         count +=1
     
     print(f'Processed {tweet_count} records of {search} to {server}')
-   
-def help():
-    print('usage: \n python3 grabTweets.py ["search"] [tweet_count] ["elasticsearch node"] \n')
-    print(f'    python3 grabTweets.py "palantir OR PLTR" 2500 "172.16.100.200" "palantir-index-" \n')
 
-try:
-    search = sys.argv[1] 
-    tweet_count = sys.argv[2]
-    server = sys.argv[3]
-    idx = sys.argv[4]
-
+# Set credentials 
+def setConfig(server):
     # Import keys from a saved file instead of inputting it directly into the script.  
     # Strip whitespaces and split on = as I only want the key values
     key_location = 'twitter.keys'
     apikeys = []
+
+    global api
+    global es
+
     with open(key_location) as keys:
         for i in keys:
             apikeys.append(i.split("=")[1].strip(" ").strip("\n"))
     keys.close()
 
     # Initialize dictionary
-    twitter_cred = dict()
+    #twitter_cred = dict()
 
     # Enter API keys
     twitter_cred["CONSUMER_KEY"] = apikeys[0]
@@ -173,18 +174,46 @@ try:
 
     # Set Elasticsearch Server
     es = Elasticsearch(server, port=9200)
+   
+def help():
+    print('\n#######################################################################################')
+    print('# usage: python3 grabTweets.py ["search"] [tweet_count] ["elasticsearch node"]        #')
+    print(f'#    python3 grabTweets.py "palantir OR PLTR" 2500 "172.16.100.200" "palantir-index-" #')
+    print('#######################################################################################\n')
+    
+try:
+    search = sys.argv[1] 
+    tweet_count = sys.argv[2]
+    server = sys.argv[3]
+    idx = sys.argv[4]
 
     # Execute search
+    setConfig(server)
     acqData(str(search), int(tweet_count))
 
 except FileNotFoundError:
-    # Key not found
-    print(f'\n !!! You need to create a twitter.keys file !!!\n')
+    # API keys not found
+    print(f'\n Error: no twitter.keys file found in current directory\n')
     print(f'*** If you have not done so, create a twitter.keys file in the same directory of this script ***\n')
     print(f'Example of twitter.key file:\n')
     print(f'api_key = [key]\n api_secret_key = [key]\n access_token = [key]\n access_token_secret = [key]\n')
 
 except IndexError:
-    # Didn't input any arguments
-    print(f'\n !!! You need to add some arguments!!!')
+    # No arguments entered
+    print(f'\n Error: No arguments given.')
     help()
+    response = input('  - Did you want to grab sample data? [Y/n]: ')
+
+    if response.lower() == 'y':
+
+        # Default values selected
+        search = 'palantir OR PLTR' 
+        tweet_count = 100
+        server = '127.0.0.1'
+        idx = 'default-'
+
+        # Execute Search
+        setConfig(server)
+        acqData(str(search), int(tweet_count))
+    else:
+        pass
