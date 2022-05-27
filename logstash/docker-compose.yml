@@ -1,0 +1,19 @@
+version: "3"
+services:
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.2.2
+    hostname: logstash
+    ports:
+      - "5044:5044"
+    volumes:
+      - logstash-data:/usr/share/logstash
+      - ${PWD}/pipeline:/usr/share/logstash/pipeline
+    networks:
+      - bridge
+
+volumes:
+  logstash-data:
+
+networks:
+  bridge:
+

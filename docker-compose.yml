@@ -32,10 +32,23 @@ services:
     depends_on:
       - elasticsearch
 
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.2.2
+    hostname: logstash
+    ports:
+      - "5044:5044"
+    volumes:
+      - logstash-data:/usr/share/logstash
+      - ${PWD}/logstash/config:/usr/share/logstash/pipeline
+    networks:
+      - bridge
+    depends_on: 
+      - elasticsearch
 
 volumes:
   esdata:
   kibana-data:
+  logstash-data:
 
 networks:
   bridge:
