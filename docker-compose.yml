@@ -1,40 +1,42 @@
 version: "3"
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
-    container_name: acklab_es01
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.2.2
     hostname: elasticsearch
     environment:
       - "discovery.type=single-node"
+      - ELASTICSEARCH_CLUSTER_NAME=siem
+      - ELASTICSEARCH_BIND_ADDRESS=0.0.0.0
+      - ELASTICSEARCH_PORT_NUMBER=9200
+      - xpack.security.enabled=false
     ports:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - ${PWD}/elasticsearch/config:/usr/share/elasticsearch/config
-      - ${PWD}/elasticsearch/logs:/usr/share/elasticsearch/logs
-      - ${PWD}/elasticsearch/data:/usr/share/elasticsearch/data
-  
+      - esdata:/usr/share/elasticsearch
+    networks:
+      - bridge    
+
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.8.0
-    container_name: acklab_kib01
+    image: docker.elastic.co/kibana/kibana:8.2.2
     hostname: kibana
+    environment:
+      - server.host="0.0.0.0"
+      - ELASTICSEARCH_HOSTS=http://172.17.0.1:9200
     ports:
       - "5601:5601"
     volumes:
-      - ${PWD}/kibana/config:/usr/share/kibana/config
-      - ${PWD}/kibana/data:/usr/share/kibana/data
+      - kibana-data:/usr/share/kibana
+    networks:
+      - bridge
     depends_on:
       - elasticsearch
-        
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.8.0
-    container_name: acklab_log01
-    hostname: logstash
-    ports:
-      - "5141:5141"
-    volumes:
-      - ${PWD}/logstash/pipeline:/usr/share/logstash/pipeline
-      - ${PWD}/logstash/data:/usr/share/logstash/data
-      - ${PWD}/logstash/config:/usr/share/config
-    depends_on:
-      - elasticsearch
+
+
+volumes:
+  esdata:
+  kibana-data:
+
+networks:
+  bridge:
+
