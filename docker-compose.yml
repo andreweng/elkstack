@@ -13,9 +13,9 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - esdata:/usr/share/elasticsearch
+      - esdata01:/usr/share/elasticsearch
     networks:
-      - bridge    
+      elkstack_bridge:    
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.2.2
@@ -28,28 +28,15 @@ services:
     volumes:
       - kibana-data:/usr/share/kibana
     networks:
-      - bridge
+      elkstack_bridge:
+
     depends_on:
       - elasticsearch
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.2.2
-    hostname: logstash
-    ports:
-      - "5044:5044"
-    volumes:
-      - logstash-data:/usr/share/logstash
-      - ${PWD}/logstash/config:/usr/share/logstash/pipeline
-    networks:
-      - bridge
-    depends_on: 
-      - elasticsearch
-
 volumes:
-  esdata:
+  esdata01:
   kibana-data:
-  logstash-data:
 
 networks:
-  bridge:
-
+  elkstack_bridge:
+    driver: bridge
